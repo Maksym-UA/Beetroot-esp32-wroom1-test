@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-const int bluePin = 6; 
+const int bluePin = 4; 
 const int redPin = 5;
 
 void setup() {
@@ -21,7 +21,7 @@ void loop() {
   delay(50);
 
   // Мигаємо червоним
-  Serial.println("Вмикаю ЧЕРВОНИЙ (GPIO 6)");
+  Serial.println("Вмикаю ЧЕРВОНИЙ (GPIO 4)");
   digitalWrite(redPin, HIGH);
   delay(50);
   digitalWrite(redPin, LOW);
