@@ -1,29 +1,36 @@
 #include <Arduino.h>
 
-const int bluePin = 4; 
-const int redPin = 5;
+const int buttonPin = 17;  // the number of the pushbutton pin
+const int bluePin =  5;    // the number of the blue pin
+const int redPin =  16;    // the number of the red pin
+
+// variable for storing the pushbutton status 
+int buttonState = 0;
 
 void setup() {
-  Serial.begin(115200);
-  delay(1000);
-  Serial.println("Система запущена!");
-
+  Serial.begin(115200);  
+  // initialize the pushbutton pin as an input
+  pinMode(buttonPin, INPUT);
+  // initialize the LED pins as an output
   pinMode(bluePin, OUTPUT);
   pinMode(redPin, OUTPUT);
 }
 
 void loop() {
-  // Мигаємо синім
-  Serial.println("Вмикаю СИНІЙ (GPIO 5)");
-  digitalWrite(bluePin, HIGH);
-  delay(50);
-  digitalWrite(bluePin, LOW);
-  delay(50);
-
-  // Мигаємо червоним
-  Serial.println("Вмикаю ЧЕРВОНИЙ (GPIO 4)");
-  digitalWrite(redPin, HIGH);
-  delay(50);
-  digitalWrite(redPin, LOW);
+  // read the state of the pushbutton value
+  buttonState = digitalRead(buttonPin);
+  Serial.println(buttonState);
+  // check if the pushbutton is pressed.
+  // if it is, the buttonState is HIGH
+  if (buttonState == HIGH) {
+    // turn LED on
+    digitalWrite(bluePin, HIGH);
+    digitalWrite(redPin, HIGH);
+  } else {
+    // turn LED off
+    digitalWrite(bluePin, LOW);
+    digitalWrite(redPin, LOW);
+  }
+  // Затримка для антидребезгу та зменшення навантаження
   delay(50);
 }
