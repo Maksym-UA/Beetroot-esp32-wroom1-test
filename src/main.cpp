@@ -1,97 +1,75 @@
 #include <Arduino.h>
 
-const int bootButton = 0; // GPIO0 як пін для кнопки
 
-const int buttonPin = 17;  // the number of the pushbutton pin
+const int bootButton = 0; // GPIO0 як пін для кнопки
+const int extButton = 17;  // the number of the pushbutton pin
 const int bluePin =  5;    // the number of the blue pin
 const int redPin =  16;    // the number of the red pin
 
+// Fixed timing intervals
+const int  intervalSlow = 1000;
+const int intervalFast = 200;
 
-bool isBlinking = false;    // Toggle this with the button
+int currentInterval = intervalSlow;
+bool isBlinking = false;
 bool ledState = LOW;
-bool lastButtonState = HIGH;
+unsigned long prevMillis = 0;
 
-unsigned long previousMillis = 0;
-const long interval = 500;  // Blink speed in milliseconds
-
-
-void btnBlinkControl(int rLED, int bLED) {
-  
-   // Мигаємо синім
-  Serial.println("Вмикаю СИНІЙ (GPIO 5)");
-  digitalWrite(bLED, HIGH);
-  delay(50);
-  digitalWrite(bLED, LOW);
-  delay(50);
-
-  // Мигаємо червоним
-  Serial.println("Вмикаю ЧЕРВОНИЙ (GPIO 16)");
-  digitalWrite(rLED, HIGH);
-  delay(50);
-  digitalWrite(rLED, LOW);
-  delay(50);
-}
-
-void bootBtnBlinkControl(int rLED, int bLED) {
-  
-   // Мигаємо синім
-  Serial.println("Вмикаю СИНІЙ (GPIO 5)");
-  digitalWrite(bLED, LOW);
-  delay(80);
-  digitalWrite(bLED, HIGH);
-  delay(80);
-
-  // Мигаємо червоним
-  Serial.println("Вмикаю ЧЕРВОНИЙ (GPIO 16)");
-  digitalWrite(rLED, LOW);
-  delay(80);
-  digitalWrite(rLED, HIGH);
-  delay(80);
-}
+// Button state tracking
+bool lastBootState = HIGH;
+bool lastExtState  = HIGH;
 
 void setup() {
-  Serial.begin(115200);  
-  // initialize the pushbutton pin as an input
-  delay(500); // Wait a moment for serial port to initialize
-  pinMode(buttonPin, INPUT);
-  // initialize the LED pins as an output
-  pinMode(bluePin, OUTPUT);
-  pinMode(redPin, OUTPUT);
-
-  pinMode(bootButton, INPUT_PULLUP); // Встановлюємо GPIO0 як вхід з підтягуванням
-  digitalWrite(bluePin, LOW); // led вимкнений на початку
-  digitalWrite(redPin, LOW); // led вимкнений на початку
-
+    Serial.begin(115200);
+    pinMode(bluePin, OUTPUT);
+    pinMode(redPin, OUTPUT);
+    pinMode(bootButton, INPUT_PULLUP);
+    pinMode(extButton,  INPUT_PULLUP);
+    Serial.println("System Ready. Boot=Slow, Ext=Fast");
 }
 
 void loop() {
-  int currentButtonState = digitalRead(bootButton);
+    bool bootState = digitalRead(bootButton);
+    bool extState  = digitalRead(extButton);
 
-  // 1. Check for button press (falling edge)
-    if (lastButtonState == HIGH && currentButtonState == LOW) {
-        isBlinking = !isBlinking; // Toggle the blinking mode
-        
-        // If we stop blinking, make sure the LED stays OFF
-        if (!isBlinking) {
-            digitalWrite(redPin, LOW);
-            digitalWrite(bluePin, LOW);
+    // 1. BOOT Button -> Set to SLOW and Toggle ON/OFF
+    if (lastBootState == HIGH && bootState == LOW) {
+        if (isBlinking && currentInterval == intervalSlow) {
+            isBlinking = false; // Stop if already slow
+        } else {
+            isBlinking = true;
+            currentInterval = intervalSlow;
         }
-        
-        Serial.print("Blinking Mode: ");
-        Serial.println(isBlinking ? "ENABLED" : "DISABLED");
-        delay(50); // Simple debounce
+        Serial.println(isBlinking ? "Mode: SLOW" : "Mode: STOPPED");
+        delay(50); 
     }
-    lastButtonState = currentButtonState;
+    lastBootState = bootState;
 
-    // 2. Handle Blinking (Non-blocking)
-    if (isBlinking) {
-        unsigned long currentMillis = millis();
-        if (currentMillis - previousMillis >= interval) {
-            previousMillis = currentMillis;
-            ledState = !ledState; // Toggle LED state
-            digitalWrite(redPin, ledState);
-            delay(50);
-            digitalWrite(bluePin, ledState);
+    // 2. External Button -> Set to FAST and Toggle ON/OFF
+    if (lastExtState == HIGH && extState == LOW) {
+        if (isBlinking && currentInterval == intervalSlow) {
+            isBlinking = false; // Stop if already fast
+        } else {
+            isBlinking = true;
+            currentInterval = intervalFast;
         }
+        Serial.println(isBlinking ? "Mode: FAST" : "Mode: STOPPED");
+        delay(50);
+    }
+    lastExtState = extState;
+
+    // 3. Non-blocking Blink Logic
+    if (isBlinking) {
+        if (millis() - prevMillis >= (unsigned long)currentInterval) {
+            prevMillis = millis();
+            ledState = !ledState;
+            digitalWrite(bluePin, ledState);
+            delay(50);
+            digitalWrite(redPin,ledState);
+            delay(50);
+        }
+    } else {
+        digitalWrite(bluePin, LOW); // Keep LED off when stopped
+        digitalWrite(redPin, LOW);
     }
 }
