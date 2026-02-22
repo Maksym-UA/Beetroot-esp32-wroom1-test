@@ -72,4 +72,5 @@ void loop() {
         digitalWrite(bluePin, LOW); // Keep LED off when stopped
         digitalWrite(redPin, LOW);
     }
+   
 }
