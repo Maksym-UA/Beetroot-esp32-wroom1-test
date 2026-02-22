@@ -1,6 +1,5 @@
 #include <Arduino.h>
 
-
 const int bootButton = 0; // GPIO0 як пін для кнопки
 const int extButton = 17;  // the number of the pushbutton pin
 const int bluePin =  5;    // the number of the blue pin
@@ -72,5 +71,4 @@ void loop() {
         digitalWrite(bluePin, LOW); // Keep LED off when stopped
         digitalWrite(redPin, LOW);
     }
-   
 }
